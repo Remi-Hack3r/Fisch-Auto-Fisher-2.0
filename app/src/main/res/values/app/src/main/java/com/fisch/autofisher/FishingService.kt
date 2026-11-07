@@ -6,22 +6,24 @@ import android.accessibilityservice.GestureDescription
 import android.graphics.Path
 import android.os.Handler
 import android.os.Looper
+import android.provider.Settings
 import android.view.accessibility.AccessibilityEvent
 
 class FishingService : AccessibilityService() {
 
     private val handler = Handler(Looper.getMainLooper())
     private var fishing = false
+    private var controls: FloatingControls? = null
 
     private val fishingLoop = object : Runnable {
         override fun run() {
             if (!fishing) return
 
-            val screenWidth = resources.displayMetrics.widthPixels
-            val screenHeight = resources.displayMetrics.heightPixels
+            val x = resources.displayMetrics.widthPixels / 2f
+            val y = resources.displayMetrics.heightPixels / 2f
 
             val path = Path().apply {
-                moveTo(screenWidth / 2f, screenHeight / 2f)
+                moveTo(x, y)
             }
 
             val gesture = GestureDescription.Builder()
@@ -37,6 +39,19 @@ class FishingService : AccessibilityService() {
         }
     }
 
+    override fun onServiceConnected() {
+        super.onServiceConnected()
+
+        if (Settings.canDrawOverlays(this)) {
+            controls = FloatingControls(
+                this,
+                onStart = { startFishing() },
+                onStop = { stopFishing() }
+            )
+            controls?.show()
+        }
+    }
+
     fun startFishing() {
         if (fishing) return
         fishing = true
@@ -48,10 +63,6 @@ class FishingService : AccessibilityService() {
         handler.removeCallbacks(fishingLoop)
     }
 
-    override fun onServiceConnected() {
-        super.onServiceConnected()
-    }
-
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {}
 
     override fun onInterrupt() {
@@ -60,6 +71,8 @@ class FishingService : AccessibilityService() {
 
     override fun onDestroy() {
         stopFishing()
+        controls?.hide()
+        controls = null
         super.onDestroy()
     }
 }
