@@ -1,0 +1,5 @@
+
+<resources>
+    <string name="app_name">Fisch Auto Fisher</string>
+    <string name="accessibility_description">Accessibility service for user-controlled fishing gestures</string>
+</resources>
